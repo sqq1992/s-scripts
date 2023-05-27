@@ -1,23 +1,21 @@
-const parser = require('@babel/parser');
-const traverse = require('@babel/traverse').default;
 const generate = require('@babel/generator').default;
-const types = require('@babel/types');
 
 const targetCalleeName = ['log', 'info', 'error', 'debug'].map(item => `console.${item}`);
 
-module.exports = function({types, template}) {
-    return {
-        visitor: {
-            CallExpression(path, state) {
+const LineParams = ({types, template})=>{
+
+
+    return{
+        visitor:{
+            CallExpression(path,state){
                 if (path.node.isNew) {
                     return;
                 }
 
                 const calleeName = generate(path.node.callee).code;
 
-                if (targetCalleeName.includes(calleeName)) {
+                if(targetCalleeName.includes(calleeName)){
                     const { line, column } = path.node.loc.start;
-
                     const newNode = template.expression(`console.log("${state.filename || 'unkown filename'}: (${line}, ${column})")`)();
                     newNode.isNew = true;
 
@@ -28,7 +26,12 @@ module.exports = function({types, template}) {
                         path.insertBefore(newNode);
                     }
                 }
+
             }
         }
     }
+
 }
+
+
+module.exports = LineParams;
